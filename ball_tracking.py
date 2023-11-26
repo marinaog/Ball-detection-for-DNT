@@ -81,7 +81,7 @@ while True:
 
 	# only proceed if at least one contour was found
 	if len(cnts) > 0:
-		# find the largest contour in the mask, then use
+		# find the largest contour inb the mask, then use
 		# it to compute the minimum enclosing circle and
 		# centroid
 		circles = []
