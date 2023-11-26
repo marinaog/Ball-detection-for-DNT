@@ -1,0 +1,12 @@
+To run it: python ball_tracking.py --video name_video.mp4 --output name_saved_video.mp4
+
+Inspiration project: https://github.com/Practical-CV/Color-Based-Ball-Tracking-With-OpenCV/blob/master/README.md
+
+
+Parameters and versions used for now:
+
+* 25/11/2023: (line 69) threshold_value = 20, (line 91) are limits = None
+	- With this configuration it works very fluid but has an issue with light colors like the blue of jeans, get's confused by objects close to the margins and small circles that it detects. 
+	- The main problem: separation of lines + ball is not possible yet. (This doesn't depend on the parameters.
+
+* 26/11/2023: 
