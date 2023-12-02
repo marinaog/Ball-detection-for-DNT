@@ -14,35 +14,39 @@ ap.add_argument("-v", "--video",
 	help="path to the (optional) video file")
 ap.add_argument("-b", "--buffer", type=int, default=64,
 	help="max buffer size")
+ap.add_argument("-t", "--track", action='store_true',
+    help="enable tracking")
 ap.add_argument("-o", "--output", type=str, default="output.avi",
 	help="path to the output video file")
 args = vars(ap.parse_args())
 
-# define the lower and upper boundaries of the "green"
-# ball in the HSV color space, then initialize the
 # list of tracked points
-pts = deque(maxlen=args["buffer"])  #How many old points do you keep to follow the track of the ball (red line in video)
+if args["track"]:
+	pts = deque(maxlen=args["buffer"])  #How many old points do you keep to follow the track of the ball (red line in video)
 
-# if a video path was not supplied, grab the reference
-# to the webcam
-if not args.get("video", False):
+# if a video path was not supplied, grab the reference to the webcam
+if not args.get("video", False):	
 	vs = VideoStream(src=0).start()
+	frame = vs.read()
+	frame_width = frame.shape[1]
+	frame_height = frame.shape[0]
 
 # otherwise, grab a reference to the video file
 else:
 	vs = cv2.VideoCapture(args["video"])
+	frame_width = int(vs.get(3)) 
+	frame_height = int(vs.get(4)) 
 
 # allow the camera or video file to warm up
 time.sleep(2.0)
 
-frame_width = int(vs.get(3)) 
-frame_height = int(vs.get(4)) 
-   
+# Get the frame width and height  
 size = (frame_width, frame_height) 
 
 #This is for the video writer
-fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-out = cv2.VideoWriter(args["output"], fourcc, 10, size)
+if args["save"]:
+	fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+	out = cv2.VideoWriter(args["output"], fourcc, 10, size)
 
 # keep looping
 while True:
@@ -63,7 +67,7 @@ while True:
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 
-	# construct a mask for the color "green", then perform
+	# filters low saturation colors (black, white and gray)
 	# a series of dilations and erosions to remove any small
 	# blobs left in the mask
 	threshold_value = 20
@@ -109,30 +113,31 @@ while True:
 				(0, 255, 255), 2)
 			cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
-	# update the points queue
-	pts.appendleft(center)
 
 	# loop over the set of tracked points
-	for i in range(1, len(pts)):
-		# if either of the tracked points are None, ignore
-		# them
-		if pts[i - 1] is None or pts[i] is None:
-			continue
+	if args["track"]:
+		pts.appendleft(center)
 
-		# otherwise, compute the thickness of the line and
-		# draw the connecting lines
-		thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
-		cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
+		for i in range(1, len(pts)):
+			# if either of the tracked points are None, ignore
+			# them
+			if pts[i - 1] is None or pts[i] is None:
+				continue
+
+			# otherwise, compute the thickness of the line and
+			# draw the connecting lines
+			thickness = int(np.sqrt(args["buffer"] / float(i + 1)) * 2.5)
+			cv2.line(frame, pts[i - 1], pts[i], (0, 0, 255), thickness)
 
 	# show the frame to our screen
 	cv2.imshow("Frame", frame)
-	out.write(frame)  # write the frame to the output video
+	if args["track"]:
+		out.write(frame)  # write the frame to the output video
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the 'q' key is pressed, stop the loop
 	if key == ord("q"):
 		break
-
 
 
 # if we are not using a video file, stop the camera video stream
@@ -144,5 +149,6 @@ else:
 	vs.release()
 
 # close all windows
-out.release()  # release the video writer
+if args["save"]:
+	out.release()  # release the video writer
 cv2.destroyAllWindows()
