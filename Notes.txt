@@ -3,10 +3,25 @@ To run it: python ball_tracking.py --video name_video.mp4 --output name_saved_vi
 Inspiration project: https://github.com/Practical-CV/Color-Based-Ball-Tracking-With-OpenCV/blob/master/README.md
 
 
+Updates:
+- 02/12/2023: 
+	Remove the tracker so it doesn't annoy us during visualization (you can get it back by doing: python ball_tracking.py --video name_video.mp4 --output name_saved_video.mp4 --track
+	Correct videocapture from webcam
+	Add limits to the ball's size with area (this has to be improved)
+	Add possibility to save the video with python ball_tracking.py --video name_video.mp4 --output name_saved_video.mp4 --save
+	
+
+
+
 Parameters and versions used for now:
 
 * 25/11/2023: (line 69) threshold_value = 20, (line 91) are limits = None
 	- With this configuration it works very fluid but has an issue with light colors like the blue of jeans, get's confused by objects close to the margins and small circles that it detects. 
 	- The main problem: separation of lines + ball is not possible yet. (This doesn't depend on the parameters.
 
-* 26/11/2023: 
+
+* 03/12/2023:Correct parameters for my webcam camera:
+	-threshold_value = 25
+	-threshold_black_value = 150
+	-if int(perimeter) != 0 and ( np.any(hsv[:, :, 2][contour[:, :, 1], contour[:, :, 0]] < threshold_black_value) ) and 130000> area > 1050: # and int(area) != 201863: #Perimeter to avoid divide by 0, and area so it doesn't take the whole image as contour (this will depend on the image i think)
+		Saved in ball_tracking_marinawebcam.py anyways.		
