@@ -77,7 +77,7 @@ while True:
     # filters low saturation colors (black, white and gray)
 	# a series of dilations and erosions to remove any small
 	# blobs left in the mask
-	threshold_value = 50
+	threshold_value = 25
 	_, mask_inv = cv2.threshold(hsv_equalized[:, :, 1], threshold_value, 255, cv2.THRESH_BINARY)
 	mask = cv2.bitwise_not(mask_inv)
 	mask = cv2.erode(mask, None, iterations=2)
@@ -90,6 +90,7 @@ while True:
 	cnts = imutils.grab_contours(cnts)
 	center = None
 
+
 	# only proceed if at least one contour was found
 	if len(cnts) > 0:
 		# find the largest contour inb the mask, then use
@@ -97,15 +98,25 @@ while True:
 		# centroid
 		circles = []
 		for contour in cnts:
+			cv2.drawContours(frame, [contour], -1, (160, 34, 119), 2)
 			area = cv2.contourArea(contour)
 			perimeter = cv2.arcLength(contour, True)
-			if int(perimeter) != 0 and 130000> area > 1050: # and int(area) != 201863: #Perimeter to avoid divide by 0, and area so it doesn't take the whole image as contour (this will depend on the image i think)
+
+			threshold_black_value = 150
+			_, mask_inv = cv2.threshold(hsv[:, :, 2], threshold_black_value, 255, cv2.THRESH_BINARY_INV)
+
+			#cv2.imshow("mask", mask_inv)
+
+
+			if int(perimeter) != 0 and ( np.any(hsv[:, :, 2][contour[:, :, 1], contour[:, :, 0]] < threshold_black_value) ) and 130000> area > 1050: # and int(area) != 201863: #Perimeter to avoid divide by 0, and area so it doesn't take the whole image as contour (this will depend on the image i think)
 				circularity = 4 * np.pi * area / (perimeter * perimeter)
 				circles.append((contour, circularity))
 
 		# Choose the contour with the highest circularity
 		circles.sort(key=lambda x: abs(x[1] - 1))  # Sort by circularity closest to 1
-			
+		
+    		
+
 		if len(circles) > 0 and abs(circles[0][1]-1) <  100: #This is a filter of enough circularity
 			best_circle = circles[0][0]  # Select the contour with closest circularity to 1
 			((x, y), radius) = cv2.minEnclosingCircle(best_circle)
