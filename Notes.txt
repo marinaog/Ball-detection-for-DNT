@@ -23,5 +23,59 @@ Parameters and versions used for now:
 * 03/12/2023:Correct parameters for my webcam camera:
 	-threshold_value = 25
 	-threshold_black_value = 150
-	-if int(perimeter) != 0 and ( np.any(hsv[:, :, 2][contour[:, :, 1], contour[:, :, 0]] < threshold_black_value) ) and 130000> area > 1050: # and int(area) != 201863: #Perimeter to avoid divide by 0, and area so it doesn't take the whole image as contour (this will depend on the image i think)
-		Saved in ball_tracking_marinawebcam.py anyways.		
+	-if int(perimeter) != 0 and ( np.any(hsv[:, :, 2][contour[:, :, 1], contour[:, :, 0]] < threshold_black_value) ) and 130000> area > 1050: # and int(area) != 201863:
+	
+Saved in ball_tracking_marinawebcam.py anyways.		
+
+
+
+	* Implemented a checker of black points inside contours so that it won't confuse ball with the white cross in front of the goal.
+
+	Good values for NAO'S camera seem to be:
+	-threshold_value = 70
+	-threshold_black_value = 150
+	-if int(area) != 0  and ( np.any(frame[:, :, 2][contour[:, :, 1], contour[:, :, 0]] < threshold_black_value) ) and  10000> area> 1850:
+				
+
+	PROBLEM: background out of the field may confuse robots. What if we only look inside the green field? We could do this in serveral ways: 1. Cutting the image depending on the angle of nao's head 2. Applying a green color filter (Which has the limitation of not detecting a ball that's on the limit ------------->>>> ALREADY SOLVED APPARENTLY
+
+
+	Adding a contour division in segments and an estimation of curvature based on the difference of slopes between the initial and final point in each segment with respect to the middle point in the segment. 
+
+	-New parameter: num_segments = 40 right now. 
+
+	Problem: this may fail when there is no line + ball, and also it detects curvature lines in white lines, but this can be solved asking for black pixels inside the contours again, after making new contours.
+
+	STILL HAVE TO DO: There may be more han two segments in the ball after having applied segmentation. There may be no ball in the image. Ball in front of robots.
+
+* 08/12/2023: TODO: Implement a function for segments calculation that will only be applied when intersection of ball with other thing or only take into account the segments model adjusting the best ball to have a different requirment.
+
+		New parameter: len_segments = 40 right now.
+		New parameter: radius_limit = 0 right now. (To avoid too short segments?) Maybe not needed
+		New parameter: circular_limit = 0.35
+		
+		I have differentiate between segments that are part of the large segment, segments that arent part of them, and those that arent part of them but are the first one that is not part of the large segment (in order to store the large segment that has already finished drawing to the potential circles)
+
+		I found a problem because when the ball is isolate of other white lines or robots,but maybe more for white lines, it's more convenient to have big segments, but when those obstacles are there it's better to have little ones to detect the ball. Maybe, a solution would be to divide contours in more or less segments depending on the curvature of the whole contour, just like we computed it in the beginning.
+
+		To do: only look in the field
+
+Improvements: preprocess to the colors of the image to better identificate certain colors.
+
+Big problem: contour calculation when it's far away -> contour is being calculated after filter, maybe improve filter or contour calculation
+
+COLORS IN NOTEBOOK:
+* Purple (160, 34, 119): contours detected
+* Brown (87, 40, 30): contours with black things inside + area limited
+* Red (255, 0, 0): consecutive segments with enough curvature
+* Blue (0, 0, 255): best circle
+
+
+* 12/12/2023: For long distances it detects the center of the ball inside the ball but not exactly on its center, but i guess its okay while it is accurate for short distances.
+
+* 24/12/2023: Something is not working properly with the black values filter. 
+		New idea: take the center between black pixels and look for the white contours that have enough curvature as limit for the radius.
+
+* 26/12/2023: TODO: Increase brigthness and decrease contrast
+
+* 15/01/2024: When there is no ball, it prints 999, 999, 999 as x, y, radius.
