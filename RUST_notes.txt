@@ -1,0 +1,4 @@
+THINGS THAT CAN BE CHANGED:
+
+- use std::f64;
+This can be changed to 32 as it may not be that necessary.
